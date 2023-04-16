@@ -32,6 +32,7 @@ function onInput() {
         clearOutput([listUlRef]);
         infoDivRef.innerHTML = markupFun(data);
       } else {
+        Notiflix.Notify.info('Please enter country name to search');
       }
     })
     .catch(error => {
