@@ -1,72 +1,41 @@
 import './css/styles.css';
-
+import Notiflix from 'notiflix';
+import { fetchFun } from './fetch';
+import { markupFun } from './markup';
+import { clearOutput } from './clearOutput';
 var debounce = require('lodash.debounce');
-console.log('Hello');
-const DEBOUNCE_DELAY = 300;
 
 const inputRef = document.getElementById('search-box');
 const infoDivRef = document.querySelector('.country-info');
-inputRef.addEventListener('input', _.debounce(onInput, 3000));
+const listUlRef = document.querySelector('.country-list');
 
-function onInput(e) {
-  console.log('onInput');
-  const name = inputRef.value;
-  fetch(`https://restcountries.com/v3.1/name/${name}`)
-    .then(response => {
-      return response.json();
-    })
+const DEBOUNCE_DELAY = 300;
+inputRef.addEventListener('input', debounce(onInput, DEBOUNCE_DELAY));
+
+function onInput() {
+  const name = inputRef.value.trim();
+  fetchFun(name)
     .then(data => {
-      const markup = `<div class='country'>
-            <div class='flag'>
-            <img src='${data[0].flags.png}' alt='' />
-            </div>
-            <div class='info'>
-            <h2>${data[0].name.common}</h2>
-            </div>
-            </div>`;
-      infoDivRef.innerHTML = markup;
+      if (data.status === 404) {
+        clearOutput([infoDivRef, listUlRef]);
+        Notiflix.Notify.failure('Oops, there is no country with that name');
+      } else if (data.length > 10) {
+        clearOutput([infoDivRef, listUlRef]);
+        Notiflix.Notify.info(
+          'Too many matches found. Please enter a more specific name.'
+        );
+      } else if (data.length > 1) {
+        clearOutput([infoDivRef]);
+        listUlRef.innerHTML = markupFun(data);
+      } else if (data.length === 1) {
+        Notiflix.Notify.success('Found a match!');
+        clearOutput([listUlRef]);
+        infoDivRef.innerHTML = markupFun(data);
+      } else {
+      }
+    })
+    .catch(error => {
+      clearOutput([infoDivRef, listUlRef]);
+      Notiflix.Notify.failure('Oops, there is no country with that name');
     });
 }
-
-const markup = `<div class='country'>
-<div class='flag'>
-  <img src='' alt='' />
-</div>
-<div class='info'>
-  <h2>Hello</h2>
-</div>
-</div>`;
-
-// fetch(
-//   'https://restcountries.com/v3.1/name/deutschland?fields=name.official,capital,population,flags.svg,languages'
-// )
-//   .then(response => {
-//     // console.log(response);
-//     return response.json();
-//   })
-//   .then(data => {
-//     console.log(data);
-//     console.log(
-//       'Capital:' +
-//         data[0].capital[0] +
-//         ', Population:' +
-//         data[0].population +
-//         ', Languages:' +
-//         data[0].languages['deu']
-//     );
-//   })
-//   .catch(error => {
-//     console.log('Error', error);
-//   });
-
-//   console.log(data[0].name.common);
-//   console.log(
-//     'Capital:' +
-//       data[0].capital[0] +
-//       ', Population:' +
-//       data[0].population +
-//       ', Languages:' +
-//       data[0].languages['deu'] +
-//       ', Flag:' +
-//       data[0].flags.png
-//   );
